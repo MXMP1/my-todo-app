@@ -34,7 +34,7 @@
       @check-empty="checkIfEmpty"
     />
 
-    <p>Количество задач: {{ currentTasksCount }}</p>
+    <TaskCounter :tasks="tasks" :is-dark-mode="isDarkMode" />
 
     <!-- Экспорт и импорт -->
     <div class="controls">
@@ -53,10 +53,14 @@
 
 <script>
 import TodoItem from './components/TodoItem.vue';
+import TaskCounter from './components/TaskCounter.vue';
 
 export default {
   name: 'App',
-  components: { TodoItem },
+  components: { 
+    TodoItem,
+    TaskCounter
+   },
   data() {
     return {
       tasks: [],
