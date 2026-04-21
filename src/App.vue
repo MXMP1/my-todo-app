@@ -1,27 +1,14 @@
 <!-- src/App.vue -->
 <template>
   <div class="container">
-    <h1>To-Do List</h1>
+    <!-- Шапка -->
+    <Header @add-task="addNewTask" />
 
-    <!-- Кнопка добавления задачи -->
-    <div class="add-btn">
-      <button @click="addNewTask">+</button>
-    </div>
-
-    <!-- Фильтры: скрыть завершённые и тема -->
-    <div class="filter-section">
-      <label class="toggle-label">
-        <input type="checkbox" v-model="hideCompleted" class="toggle-checkbox">
-        <span class="toggle-switch"></span>
-        Скрыть завершённые
-      </label>
-
-      <label class="toggle-label">
-        <input type="checkbox" v-model="isDarkMode" class="toggle-checkbox">
-        <span class="toggle-switch"></span>
-        {{ isDarkMode ? 'Темная тема' : 'Светлая тема' }}
-      </label>
-    </div>
+    <!-- Фильтры -->
+    <Filters
+      v-model:hide-completed="hideCompleted"
+      v-model:dark-mode="isDarkMode"
+    />
 
     <!-- Список задач -->
     <TodoItem
@@ -34,6 +21,7 @@
       @check-empty="checkIfEmpty"
     />
 
+    <!-- Счётчик задач -->
     <TaskCounter :tasks="tasks" :is-dark-mode="isDarkMode" />
 
     <!-- Экспорт и импорт -->
@@ -52,20 +40,24 @@
 </template>
 
 <script>
+import Header from './components/Header.vue';
+import Filters from './components/Filters.vue';
 import TodoItem from './components/TodoItem.vue';
 import TaskCounter from './components/TaskCounter.vue';
 
 export default {
   name: 'App',
-  components: { 
+  components: {
+    Header,
+    Filters,
     TodoItem,
     TaskCounter
-   },
+  },
   data() {
     return {
       tasks: [],
       hideCompleted: false,
-      isDarkMode: false,
+      isDarkMode: false
     };
   },
   computed: {
@@ -74,9 +66,6 @@ export default {
         return this.tasks.filter(task => !task.completed);
       }
       return this.tasks;
-    },
-    currentTasksCount() {
-      return this.tasks.length;
     }
   },
   methods: {
@@ -88,23 +77,16 @@ export default {
         isEditing: true
       };
       this.tasks.push(newTask);
-
-      this.$nextTick(() => {
-      // Но фокус установится автоматически благодаря watch в TodoItem
-      });
     },
-
     toggleTask(id) {
       const task = this.tasks.find(t => t.id === id);
       if (task) task.completed = !task.completed;
       this.saveToLocalStorage();
     },
-
     deleteTask(id) {
       this.tasks = this.tasks.filter(t => t.id !== id);
       this.saveToLocalStorage();
     },
-
     checkIfEmpty(id) {
       const task = this.tasks.find(t => t.id === id);
       if (!task) return;
@@ -115,12 +97,10 @@ export default {
       }
       this.saveToLocalStorage();
     },
-
     startEditing(id) {
       const task = this.tasks.find(t => t.id === id);
       if (task) task.isEditing = true;
     },
-
     exportTasks() {
       const dataStr = JSON.stringify(this.tasks, null, 2);
       const blob = new Blob([dataStr], { type: 'application/json' });
@@ -131,7 +111,6 @@ export default {
       link.click();
       URL.revokeObjectURL(url);
     },
-
     importTasks(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -150,11 +129,9 @@ export default {
       reader.readAsText(file);
       event.target.value = ''; // сбросить файл
     },
-
     saveToLocalStorage() {
       localStorage.setItem('todo-tasks', JSON.stringify(this.tasks));
     },
-
     loadFromLocalStorage() {
       const saved = localStorage.getItem('todo-tasks');
       if (saved) {
@@ -165,7 +142,6 @@ export default {
   mounted() {
     this.loadFromLocalStorage();
 
-    // Тема
     const savedTheme = localStorage.getItem('dark-theme') === 'true';
     this.isDarkMode = savedTheme;
     document.body.classList.toggle('dark-theme', savedTheme);
@@ -180,6 +156,5 @@ export default {
 </script>
 
 <style scoped>
-/* Скопируем стили из style.css, но немного адаптируем */
 @import '../src/assets/style.css';
 </style>
