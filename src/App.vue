@@ -19,10 +19,19 @@
       @delete="deleteTask"
       @edit="startEditing"
       @check-empty="checkIfEmpty"
+      @create-next="addNewTask"
     />
 
     <!-- Счётчик задач -->
-    <TaskCounter :tasks="tasks" :is-dark-mode="isDarkMode" />
+   <TaskCounter :tasks="tasks" :is-dark-mode="isDarkMode" />
+
+    <!-- Пустое состояние -->
+    <EmptyState
+      v-if="tasks.length === 0 || filteredTasks.length === 0"
+      :tasks="tasks"
+      :is-dark-mode="isDarkMode"
+      @add-task="addNewTask"
+    />
 
     <!-- Экспорт и импорт -->
     <div class="controls">
@@ -44,6 +53,7 @@ import Header from './components/Header.vue';
 import Filters from './components/Filters.vue';
 import TodoItem from './components/TodoItem.vue';
 import TaskCounter from './components/TaskCounter.vue';
+import EmptyState from './components/EmptyState.vue';
 
 export default {
   name: 'App',
@@ -51,7 +61,8 @@ export default {
     Header,
     Filters,
     TodoItem,
-    TaskCounter
+    TaskCounter,
+    EmptyState
   },
   data() {
     return {
