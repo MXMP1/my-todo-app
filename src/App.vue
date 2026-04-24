@@ -1,6 +1,9 @@
 <!-- src/App.vue -->
 <template>
   <div class="container">
+    <!-- Авторизация -->
+    <AuthButton />
+    
     <!-- Шапка -->
     <Header @add-task="addNewTask" />
 
@@ -54,6 +57,10 @@ import Filters from './components/Filters.vue';
 import TodoItem from './components/TodoItem.vue';
 import TaskCounter from './components/TaskCounter.vue';
 import EmptyState from './components/EmptyState.vue';
+import AuthButton from './components/AuthButton.vue';
+
+import { auth } from './firebaseConfig';
+import { signInWithEmailLink } from 'firebase/auth';
 
 export default {
   name: 'App',
@@ -62,7 +69,8 @@ export default {
     Filters,
     TodoItem,
     TaskCounter,
-    EmptyState
+    EmptyState,
+    AuthButton
   },
   data() {
     return {
@@ -138,7 +146,7 @@ export default {
         }
       };
       reader.readAsText(file);
-      event.target.value = ''; // сбросить файл
+      event.target.value = '';
     },
     saveToLocalStorage() {
       localStorage.setItem('todo-tasks', JSON.stringify(this.tasks));
