@@ -12,6 +12,7 @@
       src="../assets/undraw_void.svg"
       alt="Пусто (тёмная тема)"
       class="empty-image"
+      :class="{ dark: isDarkMode }"
     />
     <p v-if="tasks.length === 0">У вас пока нет задач</p>
     <p v-else>Нет активных задач</p>

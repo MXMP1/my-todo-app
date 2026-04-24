@@ -20,7 +20,7 @@
       />
     </div>
     <button v-if="hover && !task.isEditing" @click="edit" class="edit-btn">Ред.</button>
-    <button v-if="hover && !task.isEditing" @click="remove" class="delete-btn">х</button>
+    <button v-if="hover && !task.isEditing" @click="remove" class="delete-btn">×</button>
   </div>
 </template>
 
