@@ -71,35 +71,44 @@ export default {
     }
   },
   mounted() {
-    // Отслеживаем состояние авторизации
-    onAuthStateChanged(auth, (user) => {
-      this.user = user;
-      if (user) {
-        const email = window.localStorage.getItem('emailForSignIn');
-        if (email === user.email) {
-          window.localStorage.removeItem('emailForSignIn');
-          alert(`Добро пожаловать, ${user.email}!`);
-        }
-      }
-    });
-
-    // Автоматический вход по ссылке
-    if (isSignInWithEmailLink(window.location.href)) {
-      let email = window.localStorage.getItem('emailForSignIn');
-      if (!email) {
-        email = prompt('Введите email, на который была отправлена ссылка:');
-      }
-      if (email) {
-        signInWithEmailLink(auth, email, window.location.href)
-          .then(() => {
-            window.localStorage.removeItem('emailForSignIn');
-          })
-          .catch((error) => {
-            alert('Ошибка подтверждения: ' + error.message);
-          });
+  // Отслеживаем состояние авторизации
+  onAuthStateChanged(auth, (user) => {
+    this.user = user;
+    if (user) {
+      const email = window.localStorage.getItem('emailForSignIn');
+      if (email === user.email) {
+        window.localStorage.removeItem('emailForSignIn');
+        alert(`Добро пожаловать, ${user.email}!`);
       }
     }
+  });
+
+  // ✅ Защищённая проверка magic link
+  const href = typeof window !== 'undefined' ? window.location.href : '';
+  if (href && typeof href === 'string') {
+    try {
+      if (isSignInWithEmailLink(href)) {
+        let email = window.localStorage.getItem('emailForSignIn');
+        if (!email) {
+          email = prompt('Введите email, на который была отправлена ссылка:');
+        }
+        if (email) {
+          signInWithEmailLink(auth, email, href)
+            .then(() => {
+              window.localStorage.removeItem('emailForSignIn');
+              alert(`Вы успешно вошли как ${email}`);
+              window.history.replaceState({}, document.title, '/');
+            })
+            .catch((error) => {
+              alert('Ошибка подтверждения: ' + error.message);
+            });
+        }
+      }
+    } catch (error) {
+      console.warn('Ошибка при обработке email link:', error.message);
+    }
   }
+}
 };
 </script>
 

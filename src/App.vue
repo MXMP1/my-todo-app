@@ -23,6 +23,7 @@
       @edit="startEditing"
       @check-empty="checkIfEmpty"
       @create-next="addNewTask"
+      @update:text="updateTaskText"
     />
 
     <!-- Счётчик задач -->
@@ -60,6 +61,7 @@ import EmptyState from './components/EmptyState.vue';
 import AuthButton from './components/AuthButton.vue';
 
 import { auth } from './firebaseConfig';
+import { onAuthStateChanged  } from 'firebase/auth';
 import { signInWithEmailLink } from 'firebase/auth';
 
 export default {
@@ -148,6 +150,13 @@ export default {
       reader.readAsText(file);
       event.target.value = '';
     },
+    updateTaskText(id, value) {
+      const task = this.tasks.find(t => t.id === id);
+      if (task) {
+        task.text = value;
+        this.saveToLocalStorage();
+      }
+    },
     saveToLocalStorage() {
       localStorage.setItem('todo-tasks', JSON.stringify(this.tasks));
     },
@@ -159,11 +168,25 @@ export default {
     }
   },
   mounted() {
-    this.loadFromLocalStorage();
-
+    // Сначала загружаем тему
     const savedTheme = localStorage.getItem('dark-theme') === 'true';
     this.isDarkMode = savedTheme;
     document.body.classList.toggle('dark-theme', savedTheme);
+
+    // Загружаем локальные задачи
+    this.loadFromLocalStorage();
+
+    // Отслеживаем авторизацию — только ПОСЛЕ загрузки локальных данных
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // Пользователь вошёл → здесь будем решать: грузить из облака?
+        console.log('Пользователь вошёл:', user.email);
+        // ← Здесь в будущем будет синхронизация с Firestore
+      } else {
+        // Пользователь вышел → продолжаем использовать localStorage
+        console.log('Пользователь не авторизован — используем localStorage');
+      }
+    });
   },
   watch: {
     isDarkMode(newVal) {

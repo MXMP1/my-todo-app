@@ -33,7 +33,14 @@ export default {
       required: true
     }
   },
-  emits: ['toggle', 'delete', 'edit', 'check-empty', 'create-next'],
+  emits: [
+    'toggle',
+    'delete',
+    'edit',
+    'check-empty',
+    'create-next',
+    'update:text'
+  ],
   data() {
     return {
       hover: false
