@@ -60,9 +60,9 @@ import TaskCounter from './components/TaskCounter.vue';
 import EmptyState from './components/EmptyState.vue';
 import AuthButton from './components/AuthButton.vue';
 
-import { auth } from './firebaseConfig';
+import { auth, db } from './firebaseConfig';
 import { onAuthStateChanged  } from 'firebase/auth';
-import { signInWithEmailLink } from 'firebase/auth';
+import { loadTasksFromCloud, saveTasksToCloud } from './services/taskService';
 
 export default {
   name: 'App',
@@ -164,7 +164,9 @@ export default {
       const saved = localStorage.getItem('todo-tasks');
       if (saved) {
         this.tasks = JSON.parse(saved);
+        return this.tasks;
       }
+      return [];
     }
   },
   mounted() {
@@ -177,11 +179,32 @@ export default {
     this.loadFromLocalStorage();
 
     // Отслеживаем авторизацию — только ПОСЛЕ загрузки локальных данных
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
       if (user) {
         // Пользователь вошёл → здесь будем решать: грузить из облака?
         console.log('Пользователь вошёл:', user.email);
-        // ← Здесь в будущем будет синхронизация с Firestore
+        
+        const userId = user.uid;
+
+        const localTasks = this.loadFromLocalStorage();
+
+        const shouldSync = localTasks.length > 0 &&
+        confirm('Хотите синхронизировать задачи с облаком?');
+
+        if (shouldSync) {
+          await saveTasksToCloud(userId, localTasks);
+          alert('Задачи успешно синхронизированы!');
+        } else {
+          const cloudTasks = await loadTasksFromCloud(userId);
+          if (cloudTasks.length > 0) {
+            const shouldLoad = confirm('Найдены задачи в облаке. Загрузить их?');
+            if (shouldLoad) {
+              this.tasks = cloudTasks;
+              this.saveToLocalStorage();
+              alert('Задачи успешно загружены из облака!');
+            }
+          }
+        }
       } else {
         // Пользователь вышел → продолжаем использовать localStorage
         console.log('Пользователь не авторизован — используем localStorage');
