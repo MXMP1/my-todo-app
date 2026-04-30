@@ -1,21 +1,16 @@
 // src/services/taskService.js
 import { db } from '../firebaseConfig';
-import { collection, doc, getDoc, setDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 
-const TASKS_COLLECTION = 'users';
-const TASKS_DOC = (userId) => `tasks_${userId}`;
+// Получаем ссылку на документ пользователя
+const getUserDocRef = (userId) => doc(collection(db, 'users'), userId);
 
 // Загружаем задачи из Firestore
 export async function loadTasksFromCloud(userId) {
   try {
-    const userDocRef = doc(collection(db, TASKS_COLLECTION), userId);
+    const userDocRef = getUserDocRef(userId);
     const userDoc = await getDoc(userDocRef);
-
-    if (userDoc.exists()) {
-      const data = userDoc.data();
-      return data.tasks || [];
-    }
-    return [];
+    return userDoc.exists() ? userDoc.data().tasks || [] : [];
   } catch (error) {
     console.error('Ошибка загрузки из облака:', error);
     throw error;
@@ -25,10 +20,28 @@ export async function loadTasksFromCloud(userId) {
 // Сохраняем задачи в Firestore
 export async function saveTasksToCloud(userId, tasks) {
   try {
-    const userDocRef = doc(collection(db, TASKS_COLLECTION), userId);
+    const userDocRef = getUserDocRef(userId);
     await setDoc(userDocRef, { tasks }, { merge: true });
   } catch (error) {
     console.error('Ошибка сохранения в облако:', error);
     throw error;
   }
+}
+
+// Подписываемся на изменения в реальном времени
+export function subscribeToTasks(userId, onUpdate) {
+  const userDocRef = getUserDocRef(userId);
+  
+  return onSnapshot(
+    userDocRef,
+    (docSnap) => {
+      if (docSnap.exists()) {
+        const tasks = docSnap.data().tasks || [];
+        onUpdate(tasks); // Вызываем колбэк с новыми задачами
+      }
+    },
+    (error) => {
+      console.error('Ошибка подписки на задачи:', error);
+    }
+  );
 }
